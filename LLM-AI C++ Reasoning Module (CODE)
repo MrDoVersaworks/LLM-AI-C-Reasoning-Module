@@ -1,0 +1,63 @@
+#include <iostream>
+#include <string>
+#include <curl/curl.h>
+#include <json/json.h>
+
+#define OPENAI_API_KEY "your_openai_api_key"
+#define OPENAI_API_URL "https://api.openai.com/v1/chat/completions"
+
+// Helper function to handle CURL responses
+size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+    ((std::string*)userp)->append((char*)contents, size * nmemb);
+    return size * nmemb;
+}
+
+// Function to send request to OpenAI API
+std::string query_openai(const std::string& prompt) {
+    CURL* curl;
+    CURLcode res;
+    std::string readBuffer;
+
+    curl = curl_easy_init();
+    if (curl) {
+        struct curl_slist* headers = NULL;
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+        headers = curl_slist_append(headers, ("Authorization: Bearer " + std::string(OPENAI_API_KEY)).c_str());
+
+        Json::Value json;
+        json["model"] = "gpt-4";
+        json["messages"][0]["role"] = "system";
+        json["messages"][0]["content"] = "You are an AI reasoning module that provides contextual recommendations.";
+        json["messages"][1]["role"] = "user";
+        json["messages"][1]["content"] = prompt;
+
+        Json::StreamWriterBuilder writer;
+        std::string jsonString = Json::writeString(writer, json);
+
+        curl_easy_setopt(curl, CURLOPT_URL, OPENAI_API_URL);
+        curl_easy_setopt(curl, CURLOPT_POST, 1L);
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonString.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
+        res = curl_easy_perform(curl);
+        if (res != CURLE_OK) {
+            std::cerr << "CURL request failed: " << curl_easy_strerror(res) << std::endl;
+        }
+
+        curl_easy_cleanup(curl);
+    }
+    return readBuffer;
+}
+
+int main() {
+    std::string user_input;
+    std::cout << "Enter a problem statement for reasoning: ";
+    std::getline(std::cin, user_input);
+    
+    std::string response = query_openai(user_input);
+    std::cout << "AI Response: " << response << std::endl;
+    
+    return 0;
+}
