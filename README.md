@@ -17,7 +17,8 @@ Prerequisites
 •	libcurl (sudo apt install libcurl4-openssl-dev)
 •	JsonCpp (sudo apt install libjsoncpp-dev)
 Clone the Repository
-(https://github.com/MrDoVersaworks/LLM-AI-C-Reasoning-Module/blob/main/LLM-AI%20C%2B%2B%20Reasoning%20Module%20(CODE)
+git clone https://github.com/MrDoVersaworks/LLM-AI-C-Reasoning-Module.git
+cd LLM-AI-C-Reasoning-Module
 Build the Project
 g++ -o llm_ai_reasoning main.cpp -lcurl -ljsoncpp
 Run the Program
